@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+<body>
+
+<h1>Mortgage Calculator in JS</h1>
+
+<form>
+
+Home Purchase Price: <br>
+<input type="range" id="homePriceRange" min="0" max="500000" value="200000" oninput="this.form.homePrice.value=this.value; calculateMortgage();" />
+<input type="number" id="homePrice" oninput="this.form.homePriceRange.value=this.value; calculateMortgage();" value="200000"><br><br>
+
+Down Payment (%): <br>
+<input type="range" id="downPaymentRange" min="0" max="100" value="5" oninput="this.form.downPaymentPercent.value=this.value; calculateMortgage();" />
+<input type="number" id="downPaymentPercent" oninput="this.form.downPaymentRange.value=this.value; calculateMortgage();" value="5"><br><br>
+
+Term (years):<br>
+<input type="range" id="termYearsRange" min="0" step="5" max="200" value="30" oninput="this.form.termYears.value=this.value; calculateMortgage();" />
+<input type="number" id="termYears" oninput="this.form.termYearsRange.value=this.value; calculateMortgage();" value="30" step="5"><br><br>
+
+Interest Rate (%):<br>
+<input type="range" id="interestRatePercentRange" min="0" max="100" value="5" oninput="this.form.interestRatePercent.value=this.value; calculateMortgage();" />
+<input type="number" id="interestRatePercent" oninput="this.form.interestRatePercentRange.value=this.value; calculateMortgage();" value="5"><br><br>
+
+Homeowners Insurance (per year): <br>
+<input type="range" id="insuranceYearlyRange" min="0" max="50000" value="1200" oninput="this.form.insuranceYearly.value=this.value; calculateMortgage();" />
+<input type="number" id="insuranceYearly" oninput="this.form.insuranceYearlyRange.value=this.value; calculateMortgage();" value="1200"><br><br>
+
+HOA Fees (per month): <br>
+<input type="range" id="hoaFeesMonthlyRange" min="0" max="50000" value="1200" oninput="this.form.hoaFeesMonthly.value=this.value; calculateMortgage();" />
+<input type="number" id="hoaFeesMonthly" oninput="this.form.hoaFeesMonthlyRange.value=this.value; calculateMortgage();" value="50"><br><br>
+
+  Property Taxes (per year): <br>
+  <input type="range" id="propertyTaxYearly" min="0" max="50000" value="1200" oninput="this.form.propertyTaxYearly.value=this.value; calculateMortgage();" />
+<input type="number" id="propertyTaxYearly" oninput="this.form.propertyTaxYearly.value=this.value; calculateMortgage();" value="1500"><br><br>
+</form>
+
+<p id="output"></p>
+<div id="piechart"></div>
+
+<script>
+google.charts.load('current', {'packages':['corechart']});
+
+var principalAndInterest, insurance, hoaFeesMonthly, propertyTax, pmi;
+
+function calculateMortgage() {
+    var homePrice = parseFloat(document.getElementById('homePrice').value);
+    var downPaymentPercent = parseFloat(document.getElementById('downPaymentPercent').value);
+    var termYears = parseFloat(document.getElementById('termYears').value);
+    var interestRatePercent = parseFloat(document.getElementById('interestRatePercent').value);
+    var insuranceYearly = parseFloat(document.getElementById('insuranceYearly').value);
+    var hoaFeesMonthly = parseFloat(document.getElementById('hoaFeesMonthly').value);
+    var propertyTaxYearly = parseFloat(document.getElementById('propertyTaxYearly').value);
+
+    var interestRate = interestRatePercent / 100;
+    var loanAmount = homePrice * (1 - downPaymentPercent / 100);
+    var monthlyInterestRate = interestRate / 12;
+    var numPayments = termYears * 12;
+    principalAndInterest = loanAmount * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numPayments) / (Math.pow(1 + monthlyInterestRate, numPayments) - 1);
+    insurance = insuranceYearly / 12;
+    propertyTax = propertyTaxYearly / 12;
+    pmi = 0;
+    if (downPaymentPercent < 20) {
+        pmi = loanAmount * 0.005 / 12;
+    }
+    var totalMonthlyPayment = principalAndInterest + insurance + hoaFeesMonthly + propertyTax + pmi;
+
+    document.getElementById('output').innerHTML = "Principal and Interest: " + principalAndInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+    "<br>Insurance: " + insurance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+    "<br>HOA Fees: " + hoaFeesMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+    "<br>Property Tax: " + propertyTax.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+    "<br>PMI: " + pmi.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+    "<br>Total Monthly Payment: " + totalMonthlyPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    // Draw the pie chart
+    drawChart();
+}
+
+function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+        ['Payment', 'Amount'],
+        ['Principal and Interest', principalAndInterest],
+        ['Insurance', insurance],
+        ['HOA Fees', hoaFeesMonthly],
+        ['Property Tax', propertyTax],
+        ['PMI', pmi]
+    ]);
+
+    var options = {
+        title: 'Monthly Mortgage Payment Breakdown'
+    };
+
+    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+    chart.draw(data, options);
+}
+
+calculateMortgage();
+</script>
+
+</body>
+</html>
